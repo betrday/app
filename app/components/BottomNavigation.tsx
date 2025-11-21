@@ -84,7 +84,7 @@ export default function BottomNavigation() {
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 flex h-20 items-center justify-center px-4">
-      <div className="relative flex w-full max-w-[1098px] items-center justify-center gap-8">
+      <div className="relative flex w-full max-w-[1098px] items-center justify-center gap-6">
         {tabs.map((tab) => {
           const isActive = activeTab === tab.id;
 
