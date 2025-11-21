@@ -8,8 +8,12 @@ interface Tab {
   label: string;
 }
 
-export default function BottomNavigation() {
-  const [activeTab, setActiveTab] = useState('center');
+interface BottomNavigationProps {
+  activeTab: string;
+  onTabChange: (id: string) => void;
+}
+
+export default function BottomNavigation({ activeTab, onTabChange }: BottomNavigationProps) {
 
   const tabs: Tab[] = [
     {
@@ -91,7 +95,7 @@ export default function BottomNavigation() {
           return (
             <button
               key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
+              onClick={() => onTabChange(tab.id)}
               className="relative flex items-center justify-center min-h-[54px] min-w-[80px]"
             >
               <div className="relative flex items-center justify-center w-full h-full">
