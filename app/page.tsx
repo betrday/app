@@ -15,15 +15,17 @@ export default function Home() {
             <h1 className="max-w-xs text-4xl font-semibold leading-10 tracking-tight text-[#1a1a1a]">
               Betr Day
             </h1>
-            <p className="max-w-md text-md leading-6 text-[#2a2a2a]">
-              Виж всички  <a
+            <div className="flex items-center gap-1 max-w-md text-md leading-6 text-[#2a2a2a]">
+              <span>Виж всички</span>
+              <a
                 href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-                className="font-medium text-[#1a1a1a]"
+                className="font-medium text-[#1a1a1a] flex items-center justify-center"
               >
-
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M6 12L10 8L6 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
               </a>
-
-            </p>
+            </div>
           </div>
         )}
 
