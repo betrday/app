@@ -2,18 +2,18 @@
 
 import { useState } from 'react';
 import BottomNavigation from "./components/BottomNavigation";
-import CardSlider from "./components/CardSlider";
+import ImageScrollSection from "./components/ImageScrollSection";
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState('center');
 
   return (
     <div className="fixed inset-0 flex flex-col overflow-hidden" style={{ backgroundColor: '#F0E8E6' }}>
-      <main className="flex-1 overflow-y-auto overflow-x-hidden w-full max-w-[1080px] mx-auto flex flex-col items-start justify-start pb-8 bg-white rounded-b-[60px] mb-20">
+      <main className="flex-1 overflow-y-auto overflow-x-hidden w-full max-w-[1080px] mx-auto flex flex-col items-start justify-start pb-8 rounded-b-[60px] mb-20">
 
         {activeTab === 'center' && (
           <div className="flex flex-col items-start text-left w-full">
-            <CardSlider />
+            <ImageScrollSection />
           </div>
         )}
 
