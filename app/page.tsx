@@ -2,20 +2,21 @@
 
 import { useState } from 'react';
 import BottomNavigation from "./components/BottomNavigation";
+import CardSlider from "./components/CardSlider";
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState('center');
 
   return (
     <div className="fixed inset-0 flex flex-col overflow-hidden" style={{ backgroundColor: '#F0E8E6' }}>
-      <main className="flex-1 overflow-y-auto overflow-x-hidden w-full max-w-[1080px] mx-auto flex flex-col items-start justify-start py-8 px-6 bg-white rounded-b-[60px] mb-20">
+      <main className="flex-1 overflow-y-auto overflow-x-hidden w-full max-w-[1080px] mx-auto flex flex-col items-start justify-start py-8 bg-white rounded-b-[60px] mb-20">
 
         {activeTab === 'center' && (
-          <div className="flex flex-col items-start gap-1 text-left">
-            <h1 className="max-w-xs text-4xl font-semibold leading-10 tracking-tight text-[#1a1a1a]">
+          <div className="flex flex-col items-start gap-1 text-left w-full">
+            <h1 className="max-w-xs text-4xl font-semibold leading-10 tracking-tight text-[#1a1a1a] pl-6">
               Betr Day
             </h1>
-            <div className="flex items-center gap-1 max-w-md text-md leading-6 text-[#2a2a2a]">
+            <div className="flex items-center gap-1 max-w-md text-md leading-6 text-[#2a2a2a] pl-6">
               <span>Виж всички</span>
               <a
                 href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
@@ -26,11 +27,12 @@ export default function Home() {
                 </svg>
               </a>
             </div>
+            <CardSlider />
           </div>
         )}
 
         {activeTab === 'resources' && (
-          <div className="w-full flex flex-col gap-8">
+          <div className="w-full flex flex-col gap-8 px-6">
             <h1 className="text-4xl font-semibold text-[#1a1a1a]">Ресурси</h1>
 
             <div className="relative w-full">
@@ -54,12 +56,12 @@ export default function Home() {
               </svg>
             </div>
             <div className="grid grid-cols-2 gap-4 w-full">
-              <div className="h-[136px] bg-[#D9D9D9] rounded-[12px]" />
-              <div className="h-[136px] bg-[#D9D9D9] rounded-[12px]" />
-              <div className="h-[236px] bg-[#D9D9D9] rounded-[12px]" />
-              <div className="h-[236px] bg-[#D9D9D9] rounded-[12px]" />
-              <div className="h-[236px] bg-[#D9D9D9] rounded-[12px]" />
-              <div className="h-[236px] bg-[#D9D9D9] rounded-[12px]" />
+              <div className="h-[68px] bg-[#D9D9D9] rounded-[12px]" />
+              <div className="h-[68px] bg-[#D9D9D9] rounded-[12px]" />
+              <div className="h-[118px] bg-[#D9D9D9] rounded-[12px]" />
+              <div className="h-[118px] bg-[#D9D9D9] rounded-[12px]" />
+              <div className="h-[118px] bg-[#D9D9D9] rounded-[12px]" />
+              <div className="h-[118px] bg-[#D9D9D9] rounded-[12px]" />
             </div>
           </div>
         )}

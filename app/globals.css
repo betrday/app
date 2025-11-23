@@ -28,3 +28,13 @@ h5,
 h6 {
   font-family: var(--font-singel), serif;
 }
+
+@keyframes progress {
+  from {
+    width: 0%;
+  }
+
+  to {
+    width: 100%;
+  }
+}
