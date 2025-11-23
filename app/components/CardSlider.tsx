@@ -1,6 +1,5 @@
 'use client';
 import { useRef, useState, useEffect } from 'react';
-import Image from 'next/image';
 
 const cards = [
     {
@@ -25,238 +24,176 @@ export default function CardSlider() {
     const [isDragging, setIsDragging] = useState(false);
     const [startX, setStartX] = useState(0);
     const [scrollLeft, setScrollLeft] = useState(0);
-    const [activeIndex, setActiveIndex] = useState(0);
-    const isScrollingRef = useRef(false);
-    const [timeLeft, setTimeLeft] = useState(0);
 
-    // Triple the cards for infinite scroll
+    const [activeIndex, setActiveIndex] = useState(0);
+
+    // Triple the cards to create a buffer for infinite scrolling
     const infiniteCards = [...cards, ...cards, ...cards].map((card, index) => ({
         ...card,
         uniqueId: `${card.id}-${index}`,
     }));
 
-    // Initialize to middle set
     useEffect(() => {
         if (sliderRef.current) {
+            // Initialize scroll position to the middle set
             const scrollWidth = sliderRef.current.scrollWidth;
             const oneSetWidth = scrollWidth / 3;
             sliderRef.current.scrollLeft = oneSetWidth;
         }
     }, []);
 
-    useEffect(() => {
-        const timer = setInterval(() => {
-            setTimeLeft((prev) => {
-                if (prev >= 9) {
-                    scroll('right');
-                    return 0;
-                }
-                return prev + 1;
-            });
-        }, 1000);
-
-        return () => clearInterval(timer);
-    }, []);
-
-    // Reset timer when sliding to a new card
-    useEffect(() => {
-        setTimeLeft(0);
-    }, [activeIndex]);
-
     const handleScroll = () => {
-        if (!sliderRef.current || isScrollingRef.current) return;
-        const { scrollLeft, clientWidth, scrollWidth } = sliderRef.current;
+        if (!sliderRef.current) return;
+        const { scrollLeft, scrollWidth, offsetWidth } = sliderRef.current;
         const oneSetWidth = scrollWidth / 3;
 
-        // Calculate the index within one set of cards
-        const currentCardIndex = Math.round(scrollLeft / clientWidth);
-        const index = currentCardIndex % cards.length;
-        if (index !== activeIndex) {
-            setActiveIndex(index);
-        }
+        // Calculate active index
+        const cardWidth = offsetWidth * 0.85 + 16; // approximate card width + gap
+        const relativeScroll = scrollLeft % oneSetWidth;
+        const index = Math.round(relativeScroll / cardWidth) % cards.length;
+        setActiveIndex(index);
 
-        // Infinite scroll logic - only jump when we're near the edges and not dragging
-        if (!isDragging) {
-            if (scrollLeft < oneSetWidth * 0.2) {
-                isScrollingRef.current = true;
-                sliderRef.current.scrollLeft += oneSetWidth;
-                setTimeout(() => { isScrollingRef.current = false; }, 50);
-            } else if (scrollLeft > oneSetWidth * 2.8) {
-                isScrollingRef.current = true;
-                sliderRef.current.scrollLeft -= oneSetWidth;
-                setTimeout(() => { isScrollingRef.current = false; }, 50);
-            }
+        // If we scroll too far left (into the first set), jump to the middle set
+        if (scrollLeft < oneSetWidth * 0.5) {
+            sliderRef.current.scrollLeft += oneSetWidth;
         }
-
-        // Parallax / Mirror Wipe Effect (reduced for stability)
-        infiniteCards.forEach((_, i) => {
-            const content = document.getElementById(`card-content-${i}`);
-            if (content) {
-                const cardLeft = i * clientWidth;
-                const offset = scrollLeft - cardLeft;
-                const shift = Math.max(-100, Math.min(100, offset * 0.15));
-                content.style.transform = `translateX(${shift}px)`;
-            }
-        });
+        // If we scroll too far right (into the third set), jump back to the middle set
+        else if (scrollLeft > oneSetWidth * 2.5) {
+            sliderRef.current.scrollLeft -= oneSetWidth;
+        }
     };
+
+    const [isPaused, setIsPaused] = useState(false);
+
+    useEffect(() => {
+        if (isPaused) return;
+
+        const interval = setInterval(() => {
+            scroll('right');
+        }, 9000);
+
+        return () => clearInterval(interval);
+    }, [isPaused]);
 
     const handleMouseDown = (e: React.MouseEvent) => {
         if (!sliderRef.current) return;
         setIsDragging(true);
+        setIsPaused(true);
         setStartX(e.pageX - sliderRef.current.offsetLeft);
         setScrollLeft(sliderRef.current.scrollLeft);
     };
 
     const handleMouseLeave = () => {
         setIsDragging(false);
+        setIsPaused(false);
     };
 
     const handleMouseUp = () => {
         setIsDragging(false);
+        setIsPaused(false);
     };
 
     const handleMouseMove = (e: React.MouseEvent) => {
         if (!isDragging || !sliderRef.current) return;
         e.preventDefault();
         const x = e.pageX - sliderRef.current.offsetLeft;
-        const walk = (x - startX) * 2;
+        const walk = (x - startX) * 2; // Scroll-fast
         sliderRef.current.scrollLeft = scrollLeft - walk;
     };
 
     const scroll = (direction: 'left' | 'right') => {
         if (sliderRef.current) {
-            const scrollAmount = sliderRef.current.clientWidth;
+            const scrollAmount = sliderRef.current.offsetWidth * 0.85;
             sliderRef.current.scrollBy({
                 left: direction === 'left' ? -scrollAmount : scrollAmount,
-                behavior: 'auto', // Instant scroll, no sliding animation
+                behavior: 'smooth',
             });
-        }
-    };
-
-    const scrollToIndex = (index: number) => {
-        if (sliderRef.current) {
-            const { scrollLeft, clientWidth, scrollWidth } = sliderRef.current;
-            const oneSetWidth = scrollWidth / 3;
-
-            // Find which set we're currently in
-            const currentSet = Math.floor(scrollLeft / oneSetWidth);
-
-            // Calculate target position in the current set
-            const targetPosition = (currentSet * oneSetWidth) + (index * clientWidth);
-
-            sliderRef.current.scrollTo({
-                left: targetPosition,
-                behavior: 'auto' // Instant scroll, no sliding animation
-            });
-            setTimeLeft(0); // Reset timer when user manually clicks
         }
     };
 
     return (
-        <div className="w-full flex flex-col">
+        <div className="w-full flex flex-col gap-4">
             <div
                 ref={sliderRef}
-                className="w-full overflow-x-auto snap-x snap-mandatory flex [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] cursor-grab active:cursor-grabbing"
+                className="w-full mt-6 overflow-x-auto snap-x snap-mandatory flex gap-4 pb-4 pl-6 pr-6 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] cursor-grab active:cursor-grabbing"
                 onMouseDown={handleMouseDown}
                 onMouseLeave={handleMouseLeave}
                 onMouseUp={handleMouseUp}
                 onMouseMove={handleMouseMove}
                 onScroll={handleScroll}
-                onClick={(e) => e.preventDefault()}
+                onMouseEnter={() => setIsPaused(true)}
             >
-                {infiniteCards.map((card, index) => (
+                {infiniteCards.map((card) => (
                     <div
                         key={card.uniqueId}
-                        className="flex-shrink-0 w-full h-[500px] bg-[#F2F2F2] snap-center relative overflow-hidden flex flex-col items-center justify-center p-6 select-none border-b border-[rgba(255,255,255,0.26)] rounded-b-[60px]"
+                        className="flex-shrink-0 w-[85%] h-[500px] rounded-[12px] bg-[#F2F2F2] snap-start relative overflow-hidden flex flex-col justify-end p-6 select-none border border-[rgba(255,255,255,0.26)]"
                     >
-                        {/* Parallax Background Effect */}
-                        <div className="absolute inset-0 bg-gradient-to-br from-white/40 to-transparent opacity-50 pointer-events-none" />
-
-                        <div
-                            id={`card-content-${index}`}
-                            className="relative z-10 flex flex-col items-center gap-2 text-center mt-auto mb-8 transition-transform duration-75 ease-out will-change-transform pointer-events-none"
-                            style={{
-                                animation: index === activeIndex ? 'glassWipe 0.8s ease-in-out' : 'none'
-                            }}
-                        >
-                            {/* Logo and text row */}
-                            <div className="flex items-center gap-2 mb-3">
-                                <Image
-                                    src="/media_library/betrday.svg"
-                                    alt="Betr Day"
-                                    width={16}
-                                    height={16}
-                                    className="brightness-0"
-                                />
-                                <div className="w-px h-4 bg-[#1a1a1a]/30"></div>
-                                <span className="text-xs font-medium text-[#1a1a1a]/60 uppercase tracking-wide">betr day</span>
-                            </div>
-
+                        <div className="relative z-10 flex flex-col items-start gap-2">
                             <h3 className="text-3xl font-bold text-[#1a1a1a]">{card.title}</h3>
                             <p className="text-[#1a1a1a]/80 text-lg font-medium mb-4">{card.subtitle}</p>
 
-                            {card.id === 1 ? (
-                                <a
-                                    href="https://stripe.com"
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="px-6 py-3 rounded-full font-semibold text-white transition-all active:scale-95 flex items-center gap-2 backdrop-blur-sm pointer-events-auto"
-                                    style={{
-                                        backgroundColor: 'rgba(51, 51, 54, 0.82)',
-                                        border: '1px solid rgba(255, 255, 255, 0.1)',
-                                        boxShadow: '0px 1px 1px 0px rgba(0, 0, 0, 0.33)',
-                                    }}
-                                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#333336'}
-                                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'rgba(51, 51, 54, 0.82)'}
-                                >
-                                    <span className="text-sm">Виж всички</span>
-                                </a>
-                            ) : (
-                                <button
-                                    className="px-6 py-3 rounded-full font-semibold text-white transition-all active:scale-95 flex items-center gap-2 backdrop-blur-sm"
-                                    style={{
-                                        backgroundColor: 'rgba(51, 51, 54, 0.82)',
-                                        border: '1px solid rgba(255, 255, 255, 0.1)',
-                                        boxShadow: '0px 1px 1px 0px rgba(0, 0, 0, 0.33)',
-                                    }}
-                                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#333336'}
-                                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'rgba(51, 51, 54, 0.82)'}
-                                >
-                                    <span className="text-sm">Start Session</span>
-                                </button>
-                            )}
-                        </div>
-
-                        {/* Indicators inside card */}
-                        <div className="absolute bottom-6 left-0 right-0 flex justify-center items-center gap-1.5 z-10">
-                            {cards.map((_, idx) => (
-                                <button
-                                    key={idx}
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        scrollToIndex(idx);
-                                    }}
-                                    className="relative flex items-center justify-center cursor-pointer"
-                                >
-                                    <div
-                                        className={`h-1.5 rounded-full overflow-hidden transition-all duration-300 ease-in-out bg-[#D9D9D9] ${idx === activeIndex ? 'w-8' : 'w-3'
-                                            }`}
-                                    >
-                                        {idx === activeIndex && (
-                                            <div
-                                                className="h-full bg-[#1a1a1a] origin-left transition-transform duration-1000 ease-linear"
-                                                style={{
-                                                    transform: `scaleX(${timeLeft / 9})`,
-                                                    willChange: 'transform'
-                                                }}
-                                            />
-                                        )}
-                                    </div>
-                                </button>
-                            ))}
+                            <button
+                                className="px-6 py-3 rounded-full font-semibold text-white transition-all active:scale-95 flex items-center gap-2 backdrop-blur-sm"
+                                style={{
+                                    backgroundColor: 'rgba(51, 51, 54, 0.82)',
+                                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                                    boxShadow: '0px 1px 1px 0px rgba(0, 0, 0, 0.33)',
+                                }}
+                                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#333336'}
+                                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'rgba(51, 51, 54, 0.82)'}
+                            >
+                                <span className="text-sm">Start Session</span>
+                            </button>
                         </div>
                     </div>
                 ))}
+            </div>
+
+            <div className="flex items-center justify-between px-6">
+                {/* Indicators */}
+                <div className="flex gap-2">
+                    {cards.map((_, index) => (
+                        <div
+                            key={index}
+                            className={`h-2 rounded-full overflow-hidden transition-all duration-300 bg-[#D9D9D9] ${index === activeIndex ? 'w-6' : 'w-2'
+                                }`}
+                        >
+                            {index === activeIndex && !isPaused && (
+                                <div
+                                    className="h-full bg-[#1a1a1a]"
+                                    style={{
+                                        animation: 'progress 9s linear forwards'
+                                    }}
+                                />
+                            )}
+                            {index === activeIndex && isPaused && (
+                                <div className="h-full bg-[#1a1a1a] w-full" />
+                            )}
+                        </div>
+                    ))}
+                </div>
+
+                {/* Controls */}
+                <div className="flex items-center gap-4">
+                    <button
+                        onClick={() => scroll('left')}
+                        className="p-3 rounded-full bg-[#F2F2F2] text-[#1a1a1a] hover:bg-[#e5e5e5] transition-colors"
+                        aria-label="Scroll left"
+                    >
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M15 19L8 12L15 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                    </button>
+                    <button
+                        onClick={() => scroll('right')}
+                        className="p-3 rounded-full bg-[#F2F2F2] text-[#1a1a1a] hover:bg-[#e5e5e5] transition-colors"
+                        aria-label="Scroll right"
+                    >
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M9 5L16 12L9 19" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                    </button>
+                </div>
             </div>
         </div>
     );
